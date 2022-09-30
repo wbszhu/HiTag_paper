@@ -6,14 +6,15 @@ import click
 @click.command("-regf, -coolf")
 @click.argument("regf")
 @click.argument("coolf")
-def merge_reg_m(regf,coolf):
+@click.argument("outpdf")
+def merge_reg_m(regf, coolf, outpdf):
     regions = regf2list(regf)
     mat = reg2m(regions, coolf)
-    np.savetxt('out.csv', mat, delimiter=',')
+    #np.savetxt('out.csv', mat, delimiter=',')
     plt.matshow(np.log10(mat),vmin=0,vmax=2,cmap = 'YlOrRd')
     plt.colorbar(label = "log10 ICed Hi-C")    
     plt.show()
-    plt.savefig("out.pdf")
+    plt.savefig(outpdf)
 
 
 def reg2m(regions, coolf):
@@ -21,10 +22,13 @@ def reg2m(regions, coolf):
     resolution = c.binsize
     mat_res = c.matrix(balance=True).fetch(regions[0])
     mat_res1 = np.nan_to_num(mat_res, nan=0.0)
-    for r in regions[1:]:
-        mat_r = c.matrix(balance=True).fetch(r)
-        mat = np.nan_to_num(mat_r, nan=0.0)
-        mat_res1 += mat
+    try:
+        for r in regions[1:]:
+            mat_r = c.matrix(balance=True).fetch(r)
+            mat = np.nan_to_num(mat_r, nan=0.0)
+            mat_res1 += mat
+    except ValueError as e:
+        print("Warning: " + str(e))
     return mat_res1
 
 
